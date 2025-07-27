@@ -1,0 +1,12 @@
+# ziti-controller-values.yml
+clientApi:
+    advertisedHost: ctrl1-192-168-87-28.nip.io
+    advertisedPort: 443
+    service:
+        type: ClusterIP
+    ingress:
+        enabled: true
+        ingressClassName: nginx
+        annotations:
+            kubernetes.io/ingress.allow-http: "false"
+            nginx.ingress.kubernetes.io/ssl-passthrough: "true"
