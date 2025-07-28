@@ -1,10 +1,10 @@
 # router-values.yml
 ctrl:
   endpoint: ziti-controller-client.ziti.svc.cluster.local:1280
-advertisedHost: router1-192-168-87-28.nip.io
+advertisedHost: router1.localhost
 edge:
   # Explicitly set the advertisedHost for edge to avoid using service DNS name
-  advertisedHost: router1-192-168-87-28.nip.io
+  advertisedHost: router1.localhost
   advertisedPort: 443
   service:
     type: ClusterIP
@@ -16,7 +16,7 @@ edge:
       nginx.ingress.kubernetes.io/ssl-passthrough: "true"
 # Use external hostname for advertisement instead of internal service names
 link:
-  advertisedHost: router1-192-168-87-28.nip.io
+  advertisedHost: router1.localhost
   advertisedPort: 443
 tunnel:
   mode: host

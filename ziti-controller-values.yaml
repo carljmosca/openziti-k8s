@@ -1,6 +1,6 @@
 # ziti-controller-values.yml
 clientApi:
-    advertisedHost: ctrl1-192-168-87-28.nip.io
+    advertisedHost: ctrl1.localhost
     advertisedPort: 443
     service:
         type: ClusterIP

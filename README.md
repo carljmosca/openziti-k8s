@@ -5,6 +5,7 @@
 * Docker
 * Kubernetes (tested on Docker Desktop Kubernetes using Kubeadm)
 * Helm
+* Ingress-Nginx
 
 ## Installation
 
@@ -16,13 +17,19 @@ helm repo add jetstack https://charts.jetstack.io
 helm repo update
 ```
 
+Install Ingress-Nginx (skip if already installed)
+
 ```
 helm install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace
 ```
 
+Create the ziti namespace
+
 ```
 kubectl create namespace ziti
 ```
+
+Install Jetstack cert-manager and trust-manager
 
 ```
 helm upgrade --install cert-manager jetstack/cert-manager \
@@ -33,6 +40,46 @@ helm upgrade --install trust-manager jetstack/trust-manager \
     --set crds.keep=false \
     --set app.trust.namespace=ziti
 ```
+
+Patch CoreDNS to include entries for ctrl1.locahost and router1.localhost
+
+View current configmap
+
+```
+kubectl get configmap coredns -n kube-system -o yaml
+```
+
+Get address of hot
+
+```
+export HOST_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | head -1 | awk '{print $2}')
+```
+
+Patch CoreDNS configmap
+
+```
+kubectl patch configmap coredns -n kube-system --type merge -p="
+{
+  \"data\": {
+    \"Corefile\": \".:53 {\n    errors\n    health {\n       lameduck 5s\n    }\n    ready\n    hosts {\n        ${HOST_IP} ctrl1.localhost\n        ${HOST_IP} router1.localhost\n        fallthrough\n    }\n    kubernetes cluster.local in-addr.arpa ip6.arpa {\n       pods insecure\n       fallthrough in-addr.arpa ip6.arpa\n       ttl 30\n    }\n    prometheus :9153\n    forward . /etc/resolv.conf {\n       max_concurrent 1000\n    }\n    cache 30 {\n       disable success cluster.local\n       disable denial cluster.local\n    }\n    loop\n    reload\n    loadbalance\n}\"
+  }
+}"
+```
+
+
+```
+kubectl rollout restart deployment coredns -n kube-system
+```
+
+```
+kubectl get pods -n kube-system -l k8s-app=kube-dns
+```
+
+```
+kubectl run dns-test --image=busybox --rm -it --restart=Never -- nslookup ctrl1.localhost
+```
+
+Install OpenZiti controller
 
 ```
 helm pull openziti/ziti-controller
@@ -65,21 +112,15 @@ helm upgrade ziti-controller openziti/ziti-controller \
 ```
 
 ```
-export ZITI_ADMIN_PASSWORD=fwMboaN7AhwiQf1x85plQUDmcRAt3Rum
+export ZITI_ADMIN_PASSWORD=mjLcFk9pEVvGxYiiBhW04jW0pOEqUfvS
 ```
 
 ```
 ziti edge login -u admin -p $ZITI_ADMIN_PASSWORD
 ```
 
-Enter controller host[:port] (default localhost:1280): ctrl1-127-0-0-1.nip.io:443
-Untrusted certificate authority retrieved from server
-Verified that server supplied certificates are trusted by server
-Server supplied 4 certificates
-Trust server provided certificate authority [Y/N]: y
-Server certificate chain written to /Users/moscac/.ziti/certs/ctrl1-127-0-0-1.nip.io
-Token: bc14d4c3-9902-4c41-bc8b-e338eeff1448
-Saving identity 'default' to /Users/moscac/.ziti/ziti-cli.json
+Enter controller host[:port] (default localhost:1280): ctrl1.localhost
+
 
 ```
 ziti edge create edge-router "router1" \
