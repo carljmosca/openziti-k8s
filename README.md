@@ -49,7 +49,7 @@ View current configmap
 kubectl get configmap coredns -n kube-system -o yaml
 ```
 
-Get address of hot
+Get address of host
 
 ```
 export HOST_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | head -1 | awk '{print $2}')
@@ -65,7 +65,6 @@ kubectl patch configmap coredns -n kube-system --type merge -p="
   }
 }"
 ```
-
 
 ```
 kubectl rollout restart deployment coredns -n kube-system
@@ -112,7 +111,7 @@ helm upgrade ziti-controller openziti/ziti-controller \
 ```
 
 ```
-export ZITI_ADMIN_PASSWORD=mjLcFk9pEVvGxYiiBhW04jW0pOEqUfvS
+export ZITI_ADMIN_PASSWORD=5KhTOy49QoiTe6JunpFNPFYfNyKtEB9C
 ```
 
 ```
